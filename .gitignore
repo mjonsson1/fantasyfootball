@@ -1,4 +1,5 @@
 venv/
+fantasyFootball/
 __pycache__/
 .env
 *.pyc

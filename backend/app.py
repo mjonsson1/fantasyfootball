@@ -8,7 +8,7 @@ import os
 load_dotenv()  # Load environment variables
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root1234@localhost/test'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Ryangrace2!@localhost/test'
 db = SQLAlchemy(app)
 
 def row_to_dict(row):

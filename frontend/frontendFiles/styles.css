@@ -1,0 +1,472 @@
+/* Reset and Basic Styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    color: #333;
+    background-color: #f5f5f5;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  /* Header */
+  .header {
+    background-color: #1e3a8a; /* Dark blue */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+  }
+  
+  .logo {
+    font-size: 1.5em;
+    font-weight: bold;
+  }
+  
+  .nav a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    font-size: 1.1em;
+    transition: color 0.3s;
+  }
+  
+  .nav a:hover {
+    color: #ffdd57; /* Gold color for hover */
+  }
+  
+  /* Welcome Banner */
+  .welcome-banner {
+    text-align: center;
+    background: #007bff;
+    color: white;
+    padding: 60px 20px;
+  }
+  
+  .welcome-banner h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+  }
+  
+  .welcome-banner p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+  }
+  
+  .cta {
+    display: inline-block;
+    padding: 12px 25px;
+    color: #007bff;
+    background-color: #ffdd57;
+    border-radius: 5px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background-color 0.3s;
+  }
+  
+  .cta:hover {
+    background-color: #ffd700;
+  }
+  
+  /* Quick Access Section */
+  .quick-access {
+    display: flex;
+    justify-content: space-around;
+    padding: 40px 10%;
+    background-color: #e0e7ff; /* Light blue */
+  }
+  
+  .card {
+    background-color: white;
+    padding: 20px;
+    width: 30%;
+    text-align: center;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .card h2 {
+    color: #1e3a8a;
+    margin-bottom: 15px;
+  }
+  
+  .card a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 8px 16px;
+    display: inline-block;
+    background-color: #ffdd57;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  
+  .card a:hover {
+    background-color: #ffd700;
+  }
+  
+  /* Featured Section */
+  .featured {
+    padding: 40px 10%;
+    background-color: #f0f4f8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .featured h2 {
+    color: #1e3a8a;
+    font-size: 2em;
+    margin-bottom: 20px;
+  }
+  
+  .update {
+    background-color: white;
+    padding: 20px;
+    width: 80%;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .update h3 {
+    color: #007bff;
+    font-size: 1.2em;
+    margin-bottom: 5px;
+  }
+  
+  /* Footer */
+  footer {
+    text-align: center;
+    padding: 15px;
+    background: #1e3a8a;
+    color: white;
+    font-size: 0.9em;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .quick-access {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .card {
+      width: 80%;
+      margin-bottom: 20px;
+    }
+  
+    .featured .update {
+      width: 100%;
+    }
+  }
+  /* Roster Management Page Specific Styles */
+.roster-management {
+    padding: 40px 10%;
+  }
+  
+  .roster-management h1 {
+    font-size: 2.5em;
+    color: #1e3a8a;
+    margin-bottom: 20px;
+  }
+  
+  .roster-summary {
+    margin-bottom: 40px;
+  }
+  
+  .roster-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  .roster-table th,
+  .roster-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .roster-table th {
+    background-color: #007bff; /* Blue for header */
+    color: white;
+  }
+  
+  .action-btn {
+    padding: 8px 12px;
+    background-color: #ffdd57;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .action-btn:hover {
+    background-color: #ffd700;
+  }
+  
+  /* Add Player Section */
+  .add-player-section {
+    margin-top: 40px;
+    padding: 20px;
+    background-color: #e0e7ff;
+    border-radius: 8px;
+  }
+  
+  .add-player-section h2 {
+    color: #1e3a8a;
+  }
+  
+  #search-player {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .available-players {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .player-card {
+    background-color: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 1 1 30%; /* Responsive sizing */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .player-card span {
+    color: #333;
+  }
+  
+  .player-card .action-btn {
+    background-color: #007bff;
+  }
+  
+  .player-card .action-btn:hover {
+    background-color: #0056b3;
+  }
+
+  /* Table Styling */
+.injury-impact-analyzer {
+  margin: 0 auto;
+  padding: 20px;
+  max-width: 800px;
+  text-align: left;
+}
+
+.injury-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #f9f9f9;
+}
+
+.injury-table th,
+.injury-table td {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.injury-table th {
+  background-color: #007bff;
+  color: #fff;
+  font-weight: bold;
+}
+
+.injury-table tr:nth-child(even) {
+  background-color: #f4f4f4;
+}
+
+/* Button styling for consistency */
+.action-btn {
+  background-color:#007bff;
+  color: #fff;
+  padding: 8px 12px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.9em;
+  transition: background-color 0.3s ease;
+}
+
+.action-btn:hover {
+  background-color: #555;
+}
+.standings-page {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  color: #333;
+}
+
+.standings-page h1 {
+  text-align: center;
+  color: #2c3e50;
+}
+
+.standings-page p {
+  text-align: center;
+  font-style: italic;
+}
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.standings-table th, .standings-table td {
+  padding: 10px;
+  text-align: center;
+  border: 1px solid #ddd;
+}
+
+.standings-table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.standings-table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.auth-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  font-family: Arial, sans-serif;
+}
+
+.auth-page h1 {
+  color: #2c3e50;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  max-width: 300px;
+  width: 100%;
+}
+
+.auth-form label {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.auth-form input {
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.auth-btn {
+  margin-top: 20px;
+  padding: 10px;
+  color: #fff;
+  background-color: #3498db;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.auth-btn:hover {
+  background-color: #2980b9;
+}
+
+.toggle-link {
+  margin-top: 20px;
+  color: #3498db;
+  cursor: pointer;
+  text-align: center;
+}
+
+.toggle-link:hover {
+  text-decoration: underline;
+}
+.challenges-page {
+  padding: 40px;
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.challenges-page h1 {
+  color: #2c3e50;
+}
+
+.challenges-page p {
+  color: #7f8c8d;
+  margin-bottom: 30px;
+}
+
+.challenges-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.challenge-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 10px 0;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.challenge-card.completed {
+  background-color: #e0f7fa;
+  color: #00796b;
+  border-color: #00796b;
+}
+
+.challenge-card h2 {
+  color: #34495e;
+}
+
+.challenge-card p {
+  color: #666;
+}
+
+.challenge-btn {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.challenge-btn:hover {
+  background-color: #2980b9;
+}
+
+.challenge-btn:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+}
