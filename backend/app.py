@@ -12,9 +12,23 @@ import os
 
 # Load environment variables
 load_dotenv()
+def get_db_credentials():
+    credentials = {}
+    try:
+        with open("personalAuthentication.txt", "r") as file:
+            for line in file:
+                if line.strip():  # Ignore empty lines
+                    key, value = line.strip().split("=")
+                    credentials[key] = value
+    except FileNotFoundError:
+        raise Exception("personalAuthentication.txt not found.")
 
+    return credentials
+creds = get_db_credentials()
+username = creds["username"]
+password = creds["password"]
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Ryangrace2!@localhost/test'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@localhost/test'
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'  # Set a secure key for JWT
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
