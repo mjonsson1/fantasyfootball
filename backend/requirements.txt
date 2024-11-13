@@ -4,3 +4,7 @@ Flask-Migrate
 python-dotenv
 mysqlclient
 pymysql
+cryptography
+Flask-Bcrypt
+Flask-JWT-Extended
+Flask-Cors
