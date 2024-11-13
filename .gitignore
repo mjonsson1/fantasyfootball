@@ -1,4 +1,5 @@
 venv/
+fantasyFootball/
 __pycache__/
 .env
 *.pyc
@@ -7,3 +8,5 @@ build/
 dist/
 .DS_Store
 node_modules/
+personalAuthentication.txt
+
