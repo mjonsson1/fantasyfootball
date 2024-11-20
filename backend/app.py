@@ -7,6 +7,7 @@ from flask_cors import CORS
 from sqlalchemy import text
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import JSON
+import mysql.connector
 import re
 import os
 
@@ -57,44 +58,23 @@ class Team(db.Model):
     Coach = db.Column(db.String(100))
 
 class Player(db.Model):
-    __tablename__ = 'players'
-
-    # Primary key for Player table
-    PlayerID = db.Column(db.Integer, primary_key=True)
-
-    # Foreign key referencing the Team table
-    TeamID = db.Column(db.Integer, db.ForeignKey('team.TeamID'), nullable=False)
-
-    # Next game status for the player
-    NextGameStatus = db.Column(db.String(50))
-
-    # Position of the player
-    Position = db.Column(db.String(50))
-
-    # First name and last name of the player
-    FirstName = db.Column(db.String(50), nullable=False)
-    LastName = db.Column(db.String(50), nullable=False)
-
-    # Whether the player is available for the draft
-    DraftAvailability = db.Column(db.Boolean, default=True)
-
-    # Whether the player is an active player
-    ActivePlayerFlag = db.Column(db.Boolean, default=True)
-
-    # Stats of the player in JSON format
-    Stats = db.Column(JSON)
-
-    # College the player attended
-    College = db.Column(db.String(100))
-
-    # Injury history (for injury impact analyzer)
-    InjuryHistory = db.Column(JSON)
-
-    # Impact rating for injuries (a decimal with 2 digits after the decimal point)
-    ImpactRating = db.Column(db.Numeric(3, 2))
-
-    # Relationship to the Team table
-    team = db.relationship('Team', backref=db.backref('players', lazy=True))
+    __tablename__ = 'player'
+    
+    PlayerID = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-increment primary key
+    TeamID = db.Column(db.Integer, db.ForeignKey('team.TeamID'), nullable=True)  # Foreign key to the Team table
+    NextGameStatus = db.Column(db.String(50), nullable=True)
+    Position = db.Column(db.String(50), nullable=True)
+    FirstName = db.Column(db.String(50), nullable=False)  # First name (required)
+    LastName = db.Column(db.String(50), nullable=False)  # Last name (required)
+    DraftAvailability = db.Column(db.Boolean, default=True)  # Draft availability (default True)
+    ActivePlayerFlag = db.Column(db.Boolean, default=True)  # Active player flag (default True)
+    Stats = db.Column(db.JSON, nullable=True)  # Player stats (JSON format)
+    College = db.Column(db.String(100), nullable=True)  # College name
+    InjuryHistory = db.Column(db.JSON, nullable=True)  # Injury history (JSON format)
+    ImpactRating = db.Column(db.Numeric(3, 2), nullable=True)  # Impact rating for injuries (up to 3 digits, 2 decimal places)
+    
+    # Relationship to Team (if you have a Team model defined)
+    team = db.relationship('Team', backref=db.backref('players', lazy=True), foreign_keys=[TeamID])
 
 
 # User model for database
@@ -113,12 +93,22 @@ class User(db.Model):
 
 class Roster(db.Model):
     __tablename__ = 'roster'
+    
     # Primary key for Roster table
-    RosterID = db.Column(db.Integer, primary_key=True)
+    RosterID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    
     # Foreign key referencing the Players table
-    PlayerID = db.Column(db.Integer, db.ForeignKey('players.PlayerID'), nullable=False)
+    PlayerID = db.Column(db.Integer, db.ForeignKey('player.PlayerID'), nullable=False)
+    
+    # Foreign key referencing the User table
+    UserID = db.Column(db.Integer, db.ForeignKey('user.UserID'), nullable=False)
+    
     # Relationship to the Players table (optional, if you want to access Player details from Roster)
     player = db.relationship('Player', backref=db.backref('rosters', lazy=True))
+    
+    # Relationship to the User table (optional, if you want to access User details from Roster)
+    user = db.relationship('User', backref=db.backref('rosters', lazy=True))
+
 
 # Route to get players
 @app.route('/api/players', methods=['GET'])
@@ -201,9 +191,11 @@ def login():
         print(f"Stored hash: {user.Password}")
         print(f"Entered password: {password}")
 
-        # bcrypt will automatically extract the salt from the stored hash
         if bcrypt.check_password_hash(user.Password, password):
-            return jsonify({'message': 'Login successful'}), 200
+            return jsonify({
+                'message': 'Login successful',
+                'userID': user.UserID  # Include userID in the response
+            }), 200
         else:
             return jsonify({'message': 'Invalid email or password'}), 401
     else:
@@ -239,8 +231,108 @@ def reset_password():
     else:
         return jsonify({"error": "User not found"}), 404
     
+@app.route('/api/roster/<int:user_id>', methods=['GET'])
+def get_roster(user_id):
+    try:
+        # Query to join Roster with Player based on UserID
+        roster = Roster.query.filter_by(UserID=user_id).join(Player).all()
+        
+        # Build the data list with player details
+        data = [
+            {
+                "PlayerID": roster_item.player.PlayerID, 
+                "FirstName": roster_item.player.FirstName, 
+                "LastName": roster_item.player.LastName, 
+                "Position": roster_item.player.Position, 
+                "TeamName": roster_item.player.team.TeamName if roster_item.player.team else None,
+                "DraftAvailability": roster_item.player.DraftAvailability  # Include DraftAvailability
 
+            }
+            for roster_item in roster
+        ]
+        
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/roster', methods=['POST'])
+def add_to_roster():
+    data = request.json
+    user_id = data.get('UserID')
+    player_id = data.get('PlayerID')
+
+    if not user_id or not player_id:
+        return jsonify({'error': 'UserID and PlayerID are required'}), 400
+
+    try:
+        # Check if the player is available
+        player = Player.query.get(player_id)
+        if not player or not player.DraftAvailability or not player.ActivePlayerFlag:
+            return jsonify({'error': 'Player is not available to add'}), 400
+        
+        # Set DraftAvailability to False to indicate that the player has been added to a roster
+        player.DraftAvailability = False
+
+        # Add the player to the roster
+        new_roster_entry = Roster(UserID=user_id, PlayerID=player_id)
+        db.session.add(new_roster_entry)
+        db.session.commit()
+        
+        return jsonify({'message': 'Player added to roster'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/roster', methods=['DELETE'])
+def remove_from_roster():
+    data = request.json
+    user_id = data.get('UserID')
+    player_id = data.get('PlayerID')
+
+    if not user_id or not player_id:
+        return jsonify({'error': 'UserID and PlayerID are required'}), 400
+
+    try:
+        # Find the roster entry for the player
+        roster_entry = Roster.query.filter_by(UserID=user_id, PlayerID=player_id).first()
+        if not roster_entry:
+            return jsonify({'error': 'Player not found on the roster'}), 404
+        
+        # Remove the player from the roster
+        db.session.delete(roster_entry)
+        db.session.commit()
+
+        # Set the player's DraftAvailability to True
+        player = Player.query.get(player_id)
+        if player:
+            player.DraftAvailability = True
+            db.session.commit()
+
+        return jsonify({'message': 'Player removed from roster and DraftAvailability set to True'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/available-players', methods=['GET'])
+def get_available_players():
+    try:
+        players = Player.query.filter_by(DraftAvailability=True, ActivePlayerFlag=True).all()
+        data = [
+            {
+                "PlayerID": player.PlayerID,
+                "FirstName": player.FirstName,
+                "LastName": player.LastName,
+                "Position": player.Position,
+                "TeamName": player.team.TeamName if player.team else None.__annotations,
+                "DraftAvailability":player.DraftAvailability  # Include DraftAvailability
+            }
+            for player in players
+        ]
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
-

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import './styles.css';
 
-const Login = () => {
+const Login = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true); // Toggle between Login and Sign Up
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track if user is logged in
 
@@ -22,86 +22,69 @@ const Login = () => {
   const navigate = useNavigate(); // Hook to navigate programmatically
 
   // Check if there's a token on component mount
-  useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      setIsLoggedIn(true); // User is already logged in
-    }
-  }, []);
+// Check if there's a token on component mount
+useEffect(() => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    setIsLoggedIn(true); // User is already logged in
+  }
 
-  // Toggle form
+  const handleUnload = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('userID');
+    console.log('User logged out due to app closure');
+  };
+
+  window.addEventListener('beforeunload', handleUnload);
+
+  return () => {
+    window.removeEventListener('beforeunload', handleUnload);
+  };
+}, []);
+
+
+  // Toggle form between Login and Sign Up
   const toggleForm = () => setIsLogin(!isLogin);
 
-  // Handle submit (make API requests to backend using axios)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');  // Reset error before trying
-
+    setError('');
+  
     const requestData = { email, password };
-
-    // Handle validation for sign-up
-    if (!isLogin) {
-      if (password !== confirmPassword) {
-        setError('Passwords do not match');
-        setIsLoading(false);
-        return;
-      }
-
-      // Additional validation for form fields
-      if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-        setError('Password must be at least 8 characters long and include a number and a capital letter.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Include additional registration fields
-      Object.assign(requestData, { 
-        FirstName: firstName, 
-        LastName: lastName, 
-        Username: username, 
-        Birthdate: birthdate, 
-        Age: age 
-      });
-    }
-
+  
     try {
-      const url = isLogin
-        ? 'http://localhost:5000/api/login' // Login route
-        : 'http://localhost:5000/api/register'; // Registration route
-
-      // Make the API request using Axios
-      const response = await axios.post(url, requestData);
-
-      if (!isLogin) {
-        console.log('Account created successfully:', response.data);
-      } else {
-        console.log('Login successful:', response.data);
-        
-        // Store token in localStorage
-        localStorage.setItem('auth_token', response.data.token);
-
-        // Update login state
-        setIsLoggedIn(true);
-
-        // Redirect to the home page
-        navigate('/');  // You can change '/home' to whatever your home route is
-      }
+      const response = await axios.post(
+        'http://localhost:5000/api/login', 
+        requestData
+      );
+  
+      console.log('Login successful:', response.data);
+  
+      // Store token and userID in localStorage
+      localStorage.setItem('auth_token', response.data.token);
+      localStorage.setItem('userID', response.data.userID);
+  
+      // Call onLogin and pass userID to parent
+      onLogin(response.data.userID); // Pass userID to parent
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'An error occurred');
       console.error('Error:', err);
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
+  
 
-  // Handle logout
-  const handleLogout = () => {
-    // Clear token from localStorage
-    localStorage.removeItem('auth_token');
-    setIsLoggedIn(false);
-    console.log('User logged out');
-  };
+// Handle logout
+const handleLogout = () => {
+  localStorage.removeItem('auth_token');
+  setIsLoggedIn(false);
+  console.log('User logged out');
+  window.location.reload(); // Refresh the page
+};
+
 
   return (
     <div className="auth-page">
@@ -199,9 +182,9 @@ const Login = () => {
               {isLoading ? 'Loading...' : isLogin ? 'Login' : 'Sign Up'}
             </button>
           </form>
-          <p onClick={toggleForm} className="toggle-link">
-            {isLogin ? 'Create an account' : 'Already have an account? Login'}
-          </p>
+          <button onClick={toggleForm} className="auth-btn">
+            {isLogin ? 'Create Account' : 'Already have an account? Login'}
+          </button>
         </div>
       )}
     </div>
