@@ -8,3 +8,5 @@ cryptography
 Flask-Bcrypt
 Flask-JWT-Extended
 Flask-Cors
+pandas
+mysql-connector-python
