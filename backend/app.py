@@ -10,6 +10,7 @@ from sqlalchemy.dialects.postgresql import JSON
 import mysql.connector
 import re
 import os
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -37,86 +38,33 @@ jwt = JWTManager(app)
 CORS(app)  # Enable CORS for all routes
 migrate = Migrate(app, db)
 
+with app.app_context():
+        from models import Roster, User, Player, InjuryReports, HeadToHead, WeeklyChallenges, GameWeek, Team, UserChallenges, League
+        db.create_all()
+
 # Helper function to convert SQLAlchemy rows to dictionaries
 def row_to_dict(row):
     """Convert SQLAlchemy Row to dictionary using _mapping."""
     return dict(row._mapping)  # Use _mapping to access row data
 
-class Team(db.Model):
-    __tablename__ = 'team'
-
-    # Primary key for Team table
-    TeamID = db.Column(db.Integer, primary_key=True)
-
-    # Team name (e.g., "Dallas Cowboys")
-    TeamName = db.Column(db.String(100), nullable=False)
-
-    # Team location (e.g., "Dallas, TX")
-    TeamLocation = db.Column(db.String(100))
-
-    # Coach of the team
-    Coach = db.Column(db.String(100))
-
-class Player(db.Model):
-    __tablename__ = 'player'
-    
-    PlayerID = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-increment primary key
-    TeamID = db.Column(db.Integer, db.ForeignKey('team.TeamID'), nullable=True)  # Foreign key to the Team table
-    NextGameStatus = db.Column(db.String(50), nullable=True)
-    Position = db.Column(db.String(50), nullable=True)
-    FirstName = db.Column(db.String(50), nullable=False)  # First name (required)
-    LastName = db.Column(db.String(50), nullable=False)  # Last name (required)
-    DraftAvailability = db.Column(db.Boolean, default=True)  # Draft availability (default True)
-    ActivePlayerFlag = db.Column(db.Boolean, default=True)  # Active player flag (default True)
-    Stats = db.Column(db.JSON, nullable=True)  # Player stats (JSON format)
-    College = db.Column(db.String(100), nullable=True)  # College name
-    InjuryHistory = db.Column(db.JSON, nullable=True)  # Injury history (JSON format)
-    ImpactRating = db.Column(db.Numeric(3, 2), nullable=True)  # Impact rating for injuries (up to 3 digits, 2 decimal places)
-    
-    # Relationship to Team (if you have a Team model defined)
-    team = db.relationship('Team', backref=db.backref('players', lazy=True), foreign_keys=[TeamID])
-
-
-# User model for database
-class User(db.Model):
-    __tablename__ = 'user'
-    
-    UserID = db.Column(db.Integer, primary_key=True)  # Corresponds to the UserID column in the table
-    FirstName = db.Column(db.String(50), nullable=False)
-    LastName = db.Column(db.String(50), nullable=False)
-    Birthdate = db.Column(db.Date, nullable=False)
-    Age = db.Column(db.Integer)
-    Email = db.Column(db.String(100), unique=True, nullable=False)
-    Username = db.Column(db.String(50), unique=True, nullable=False)
-    Record = db.Column(db.String(10))
-    Password = db.Column(db.String(255), nullable=False)
-
-class Roster(db.Model):
-    __tablename__ = 'roster'
-    
-    # Primary key for Roster table
-    RosterID = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    
-    # Foreign key referencing the Players table
-    PlayerID = db.Column(db.Integer, db.ForeignKey('player.PlayerID'), nullable=False)
-    
-    # Foreign key referencing the User table
-    UserID = db.Column(db.Integer, db.ForeignKey('user.UserID'), nullable=False)
-    
-    # Relationship to the Players table (optional, if you want to access Player details from Roster)
-    player = db.relationship('Player', backref=db.backref('rosters', lazy=True))
-    
-    # Relationship to the User table (optional, if you want to access User details from Roster)
-    user = db.relationship('User', backref=db.backref('rosters', lazy=True))
-
-
-# Route to get players
 @app.route('/api/players', methods=['GET'])
 def get_players():
     try:
+        query = """
+        SELECT p.PlayerID, CONCAT(p.FirstName, ' ', p.LastName) AS Name, p.Position, t.TeamName, t.TeamLocation,
+            ir.InjuryType, ir.StartDate, ir.ExpectedReturnDate, ir.CurrentStatus
+        FROM player p
+        LEFT JOIN InjuryReports ir ON p.PlayerID = ir.PlayerID
+        LEFT JOIN Team t ON p.TeamID = t.TeamID
+        """
+
+
+        
         with db.engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM players;"))
+            result = connection.execute(text(query))
+            # Convert the result rows to dictionaries
             data = [row_to_dict(row) for row in result]
+
         return jsonify(data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -333,6 +281,83 @@ def get_available_players():
         return jsonify(data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    try:
+        users = User.query.all()
+        data = [
+            {
+                "UserID": user.UserID,
+                "FirstName": user.FirstName,
+                "LastName": user.LastName,
+                "Record": user.Record
+            }
+            for user in users
+        ]
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/player_injury/<int:player_id>', methods=['GET'])
+def get_player_injury(player_id):
+    try:
+        player = Player.query.get(player_id)
+        if player:
+            return jsonify({'PlayerID': player.PlayerID, 'InjuryHistory': player.InjuryHistory}), 200
+        else:
+            return jsonify({'error': 'Player not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+@app.route('/api/standings', methods=['GET'])
+def get_standings():
+    standings = db.session.query(
+        User.UserID, 
+        User.FirstName, 
+        User.LastName, 
+        User.Record, 
+        League.Week, 
+        League.User1_Score, 
+        League.User2_Score
+    ).join(League, (League.User1ID == User.UserID) | (League.User2ID == User.UserID)).all()
+    
+    return jsonify([{
+        "UserID": s.UserID,
+        "FirstName": s.FirstName,
+        "LastName": s.LastName,
+        "Record": s.Record,
+        "Week": s.Week,
+        "User1_Score": s.User1_Score,
+        "User2_Score": s.User2_Score
+    } for s in standings])
+# Function to calculate and update record for each user
+def update_user_records():
+    users = User.query.all()  # Fetch all users
+    
+    for user in users:
+        # Calculate wins and losses for each user based on League standings
+        wins = 0
+        losses = 0
+        
+        leagues = League.query.filter_by(UserID=user.UserID).all()  # Get all leagues for this user
+        for league in leagues:
+            if league.Standings:
+                for week, scores in league.Standings.items():
+                    if f'User {user.UserID}' in scores:  # Adjust this according to how you're identifying the user
+                        if scores[f'User {user.UserID}'] == 1:
+                            wins += 1
+                        else:
+                            losses += 1
+
+        # Update user's record
+        user.Record = f"{wins}-{losses}"
+        db.session.commit()  # Commit the changes to the database
+
+@app.route('/api/update_records', methods=['GET'])
+def update_records():
+    update_user_records()
+    return jsonify({"message": "User records updated successfully"})
 
 if __name__ == '__main__':
     app.run(debug=True)

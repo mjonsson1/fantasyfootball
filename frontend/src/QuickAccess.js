@@ -6,7 +6,7 @@ function QuickAccess() {
       <div className="card">
         <h2>Check Standings</h2>
         <p>Check how each team is faring.</p>
-        <a href="Standings">Check Standings</a>
+        <a href="standings">Check Standings</a>
       </div>
       <div className="card">
         <h2>Injury Updates</h2>
