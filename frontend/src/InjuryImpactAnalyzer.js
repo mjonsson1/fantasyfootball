@@ -7,19 +7,26 @@ const InjuryImpactAnalyzer = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchPlayerData = async () => {
+    const fetchRosterData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/players');  // Update the URL if needed
+        const userID = localStorage.getItem('userID');
+        if (!userID) {
+          setError('User not logged in');
+          setLoading(false);
+          return;
+        }
+        const response = await axios.get(`http://localhost:5000/api/roster/${userID}`);
         setPlayers(response.data);
         setLoading(false);
       } catch (err) {
-        setError('Error fetching player data');
+        setError('Error fetching roster data');
         setLoading(false);
       }
     };
-
-    fetchPlayerData();
+  
+    fetchRosterData();
   }, []);
+  
 
   const calculateImpact = (expectedReturnDate) => {
     const currentDate = new Date();
@@ -30,6 +37,22 @@ const InjuryImpactAnalyzer = () => {
     if (diffDays <= 0) return 'High'; // If the expected return is overdue
     if (diffDays <= 14) return 'Medium'; // Return in less than 2 weeks
     return 'Low'; // Return after 2 weeks
+  };
+
+  const handleRemovePlayer = (playerID) => {
+    const userID = localStorage.getItem('userID');
+    if (!userID) return;
+
+    axios
+      .delete('http://localhost:5000/api/roster', {
+        data: { UserID: userID, PlayerID: playerID },
+      })
+      .then(() => {
+        setPlayers((prevPlayers) => prevPlayers.filter((player) => player.PlayerID !== playerID));
+      })
+      .catch((error) => {
+        console.error('Error removing player:', error);
+      });
   };
 
   if (loading) {
@@ -56,13 +79,14 @@ const InjuryImpactAnalyzer = () => {
             <th>Expected Return</th>
             <th>Current Status</th>
             <th>Impact</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
           {players.length > 0 ? (
             players.map((player, index) => (
               <tr key={index}>
-                <td>{player.Name}</td>
+                <td>{player.FirstName} {player.LastName}</td>
                 <td>{player.Position}</td>
                 <td>{player.TeamName}</td>
                 <td>{player.InjuryType || 'N/A'}</td>
@@ -70,11 +94,19 @@ const InjuryImpactAnalyzer = () => {
                 <td>{player.ExpectedReturnDate}</td>
                 <td>{player.CurrentStatus}</td>
                 <td>{player.ExpectedReturnDate ? calculateImpact(player.ExpectedReturnDate) : 'N/A'}</td>
+                <td>
+                  <button
+                    className="remove-button"
+                    onClick={() => handleRemovePlayer(player.PlayerID)}
+                  >
+                    Remove from Roster
+                  </button>
+                </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="8">No injury data available.</td>
+              <td colSpan="9">No players in your active roster.</td>
             </tr>
           )}
         </tbody>

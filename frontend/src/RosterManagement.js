@@ -21,20 +21,6 @@ const RosterManagement = ({ userID }) => {
     return player.draft_available ? "Available for Draft" : "Not Available for Draft";
   };
 
-  const handleRemovePlayer = (playerID) => {
-    const id = userID || localStorage.getItem('userID');
-    if (!id) return;
-
-    axios.delete('http://localhost:5000/api/roster', { data: { UserID: id, PlayerID: playerID } })
-      .then(() => {
-        // Remove player from local state to update UI
-        setRoster(prevRoster => prevRoster.filter(player => player.PlayerID !== playerID));
-      })
-      .catch(error => {
-        console.error('Error removing player:', error);
-      });
-  };
-
   return (
     <div className="roster-management">
       <h1>Your Roster</h1>
@@ -47,7 +33,6 @@ const RosterManagement = ({ userID }) => {
                 <th>Position</th>
                 <th>Team</th>
                 <th>Draft Status</th>
-                <th>Action</th> {/* Add a column for action */}
               </tr>
             </thead>
             <tbody>
@@ -57,14 +42,6 @@ const RosterManagement = ({ userID }) => {
                   <td>{player.Position}</td>
                   <td>{player.TeamName}</td>
                   <td>{handleDraftAvailability(player)}</td>
-                  <td>
-                    <button
-                      className="remove-button"
-                      onClick={() => handleRemovePlayer(player.PlayerID)}
-                    >
-                      Remove from Roster
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>

@@ -30,7 +30,7 @@ creds = get_db_credentials()
 username = creds["username"]
 password = creds["password"]
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@localhost/test'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@localhost/fantasyfootball2'
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'  # Set a secure key for JWT
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -182,26 +182,25 @@ def reset_password():
 @app.route('/api/roster/<int:user_id>', methods=['GET'])
 def get_roster(user_id):
     try:
-        # Query to join Roster with Player based on UserID
-        roster = Roster.query.filter_by(UserID=user_id).join(Player).all()
+        # Query to join Roster, Player, Team, and InjuryReports based on UserID
+        query = """
+        SELECT r.UserID, p.PlayerID, p.FirstName, p.LastName, p.Position, 
+               t.TeamName, ir.InjuryType, ir.StartDate, ir.ExpectedReturnDate, ir.CurrentStatus
+        FROM Roster r
+        JOIN Player p ON r.PlayerID = p.PlayerID
+        LEFT JOIN Team t ON p.TeamID = t.TeamID
+        LEFT JOIN InjuryReports ir ON p.PlayerID = ir.PlayerID
+        WHERE r.UserID = :user_id
+        """
         
-        # Build the data list with player details
-        data = [
-            {
-                "PlayerID": roster_item.player.PlayerID, 
-                "FirstName": roster_item.player.FirstName, 
-                "LastName": roster_item.player.LastName, 
-                "Position": roster_item.player.Position, 
-                "TeamName": roster_item.player.team.TeamName if roster_item.player.team else None,
-                "DraftAvailability": roster_item.player.DraftAvailability  # Include DraftAvailability
+        with db.engine.connect() as connection:
+            result = connection.execute(text(query), {"user_id": user_id})
+            data = [row_to_dict(row) for row in result]
 
-            }
-            for roster_item in roster
-        ]
-        
         return jsonify(data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 
 @app.route('/api/roster', methods=['POST'])
