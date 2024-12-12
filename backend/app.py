@@ -28,7 +28,7 @@ creds = get_db_credentials()
 username = creds["username"]
 password = creds["password"]
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@localhost/NFL_STATS'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@localhost/FINAL_NFL_STATS'
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'  # Set a secure key for JWT
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -125,10 +125,13 @@ class Roster(db.Model):
 def get_players():
     try:
         with db.engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM players;"))
+            result = connection.execute(text("SELECT * FROM players ORDER BY Position ASC, PlayerName ASC;"))
+            # Ensure each row is being converted into a dictionary with correct keys
             data = [row_to_dict(row) for row in result]
+            # print(data)  # Log the data to check the structure
         return jsonify(data), 200
     except Exception as e:
+        print(f"Error: {str(e)}")  # Log the error to debug it
         return jsonify({'error': str(e)}), 500
 
 # Route to test database connection
