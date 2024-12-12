@@ -1,12 +1,12 @@
 from app import db
 
 
-# class Player(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(80), nullable=False)
-#     team = db.Column(db.String(50), nullable=False)
-#     position = db.Column(db.String(20), nullable=False)
-#     # points = db.Column(db.Float, default=0.0)
+class Player(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False)
+    team = db.Column(db.String(50), nullable=False)
+    position = db.Column(db.String(20), nullable=False)
+    # points = db.Column(db.Float, default=0.0)
 
 
 class Team(db.Model):
@@ -58,6 +58,7 @@ class Roster(db.Model):
     
     # Relationship to the User table (optional, if you want to access User details from Roster)
     user = db.relationship('User', backref=db.backref('rosters', lazy=True))
+    
 class League(db.Model):
     __tablename__ = 'league'
 
