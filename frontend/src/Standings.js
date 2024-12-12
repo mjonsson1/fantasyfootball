@@ -1,58 +1,66 @@
-import React from 'react';
-import './styles.css';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const Standings = () => {
-  return (
-    <div className="standings-page">
-      <h1>Fantasy League Standings</h1>
-      <p>This is a placeholder. The standings will be dynamically populated from the backend once implemented.</p>
+  const [standings, setStandings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-      <table className="standings-table">
+  useEffect(() => {
+    const fetchStandings = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/standings'); // Adjust endpoint if needed
+        setStandings(response.data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchStandings();
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+
+  // Group the standings by week
+  const groupedStandings = standings.reduce((acc, curr) => {
+    const week = curr.Week;
+    if (!acc[week]) {
+      acc[week] = [];
+    }
+    acc[week].push(curr);
+    return acc;
+  }, {});
+
+  return (
+    <div className="Standings">
+      <header>
+        <h1>Fantasy Football Weekly Standings</h1>
+      </header>
+      <table>
         <thead>
           <tr>
-            <th>Rank</th>
-            <th>Team Name</th>
-            <th>Wins</th>
-            <th>Losses</th>
-            <th>Points</th>
+            <th>Week</th>
+            <th>User</th>
+            <th>Record</th>
+            <th>Score</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>Team A</td>
-            <td>8</td>
-            <td>2</td>
-            <td>750</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Team B</td>
-            <td>7</td>
-            <td>3</td>
-            <td>690</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td>Team C</td>
-            <td>6</td>
-            <td>4</td>
-            <td>670</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td>Team D</td>
-            <td>5</td>
-            <td>5</td>
-            <td>630</td>
-          </tr>
-          <tr>
-            <td>5</td>
-            <td>Team E</td>
-            <td>4</td>
-            <td>6</td>
-            <td>580</td>
-          </tr>
+          {Object.keys(groupedStandings).map((week) => (
+            groupedStandings[week].map((user, index) => (
+              <tr key={index}>
+                <td>{week}</td>
+                <td>{user.FirstName} {user.LastName}</td>
+                <td>{user.Record}</td>
+                <td>
+                  {user.UserID === 1 ? `User 1: ${user.User1_Score}` : `User 2: ${user.User2_Score}`}
+                </td>
+              </tr>
+            ))
+          ))}
         </tbody>
       </table>
     </div>

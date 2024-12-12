@@ -218,54 +218,52 @@
     background-color: #ffd700;
   }
   
-  /* Add Player Section */
-  .add-player-section {
-    margin-top: 40px;
-    padding: 20px;
-    background-color: #e0e7ff;
-    border-radius: 8px;
-  }
-  
-  .add-player-section h2 {
-    color: #1e3a8a;
-  }
-  
-  #search-player {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-  
-  .available-players {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
-  
-  .player-card {
-    background-color: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    flex: 1 1 30%; /* Responsive sizing */
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .player-card span {
-    color: #333;
-  }
-  
-  .player-card .action-btn {
-    background-color: #007bff;
-  }
-  
-  .player-card .action-btn:hover {
-    background-color: #0056b3;
-  }
+/* Available Players Page Specific Styles */
+.available-players {
+  padding: 40px 10%;
+}
+
+.available-players h2 {
+  font-size: 2.5em;
+  color: #1e3a8a;
+  margin-bottom: 20px;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+}
+
+.player-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.player-item {
+  background-color: #f1f5f8;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.player-item:hover {
+  background-color: #f3f4f6;
+  cursor: pointer;
+}
+
+.action-btn {
+  padding: 8px 12px;
+  background-color: #ffdd57;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.action-btn:hover {
+  background-color: #ffd700;
+}
 
   /* Table Styling */
 .injury-impact-analyzer {
@@ -517,3 +515,32 @@
 .dropdown:hover .dropdown-link {
   background-color: #ddd;
 }
+.remove-button {
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.remove-button:hover {
+  background-color: darkred;
+}
+
+table {
+  width: 80%;
+  margin: 20px auto;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+th {
+  background-color: #007bff;
+  color: white;
+}
+

@@ -7,8 +7,10 @@ from flask_cors import CORS
 from sqlalchemy import text
 from dotenv import load_dotenv
 from sqlalchemy.dialects.postgresql import JSON
+import mysql.connector
 import re
 import os
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -28,7 +30,9 @@ creds = get_db_credentials()
 username = creds["username"]
 password = creds["password"]
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@localhost/NFL_STATS'
+# ADD PERSONAL DB HERE
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@localhost/fantasyfootball2'
+
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'  # Set a secure key for JWT
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -36,97 +40,33 @@ jwt = JWTManager(app)
 CORS(app)  # Enable CORS for all routes
 migrate = Migrate(app, db)
 
+with app.app_context():
+        from models import Roster, User, Player, InjuryReports, HeadToHead, WeeklyChallenges, GameWeek, Team, UserChallenges, League
+        db.create_all()
+
 # Helper function to convert SQLAlchemy rows to dictionaries
 def row_to_dict(row):
     """Convert SQLAlchemy Row to dictionary using _mapping."""
     return dict(row._mapping)  # Use _mapping to access row data
 
-class Team(db.Model):
-    __tablename__ = 'team'
-
-    # Primary key for Team table
-    TeamID = db.Column(db.Integer, primary_key=True)
-
-    # Team name (e.g., "Dallas Cowboys")
-    TeamName = db.Column(db.String(100), nullable=False)
-
-    # Team location (e.g., "Dallas, TX")
-    TeamLocation = db.Column(db.String(100))
-
-    # Coach of the team
-    Coach = db.Column(db.String(100))
-
-class Player(db.Model):
-    __tablename__ = 'players'
-
-    # Primary key for Player table
-    PlayerID = db.Column(db.Integer, primary_key=True)
-
-    # Foreign key referencing the Team table
-    TeamID = db.Column(db.Integer, db.ForeignKey('team.TeamID'), nullable=False)
-
-    # Next game status for the player
-    NextGameStatus = db.Column(db.String(50))
-
-    # Position of the player
-    Position = db.Column(db.String(50))
-
-    # First name and last name of the player
-    FirstName = db.Column(db.String(50), nullable=False)
-    LastName = db.Column(db.String(50), nullable=False)
-
-    # Whether the player is available for the draft
-    DraftAvailability = db.Column(db.Boolean, default=True)
-
-    # Whether the player is an active player
-    ActivePlayerFlag = db.Column(db.Boolean, default=True)
-
-    # Stats of the player in JSON format
-    Stats = db.Column(JSON)
-
-    # College the player attended
-    College = db.Column(db.String(100))
-
-    # Injury history (for injury impact analyzer)
-    InjuryHistory = db.Column(JSON)
-
-    # Impact rating for injuries (a decimal with 2 digits after the decimal point)
-    ImpactRating = db.Column(db.Numeric(3, 2))
-
-    # Relationship to the Team table
-    team = db.relationship('Team', backref=db.backref('players', lazy=True))
-
-
-# User model for database
-class User(db.Model):
-    __tablename__ = 'user'
-    
-    UserID = db.Column(db.Integer, primary_key=True)  # Corresponds to the UserID column in the table
-    FirstName = db.Column(db.String(50), nullable=False)
-    LastName = db.Column(db.String(50), nullable=False)
-    Birthdate = db.Column(db.Date, nullable=False)
-    Age = db.Column(db.Integer)
-    Email = db.Column(db.String(100), unique=True, nullable=False)
-    Username = db.Column(db.String(50), unique=True, nullable=False)
-    Record = db.Column(db.String(10))
-    Password = db.Column(db.String(255), nullable=False)
-
-class Roster(db.Model):
-    __tablename__ = 'roster'
-    # Primary key for Roster table
-    RosterID = db.Column(db.Integer, primary_key=True)
-    # Foreign key referencing the Players table
-    PlayerID = db.Column(db.Integer, db.ForeignKey('players.PlayerID'), nullable=False)
-    # Relationship to the Players table (optional, if you want to access Player details from Roster)
-    player = db.relationship('Player', backref=db.backref('rosters', lazy=True))
-
-# Route to get players
 @app.route('/api/players', methods=['GET'])
 def get_players():
     try:
+        query = """
+        SELECT p.PlayerID, CONCAT(p.FirstName, ' ', p.LastName) AS Name, p.Position, t.TeamName, t.TeamLocation,
+            ir.InjuryType, ir.StartDate, ir.ExpectedReturnDate, ir.CurrentStatus
+        FROM player p
+        LEFT JOIN InjuryReports ir ON p.PlayerID = ir.PlayerID
+        LEFT JOIN Team t ON p.TeamID = t.TeamID
+        """
+
+
+        
         with db.engine.connect() as connection:
-            result = connection.execute(text("SELECT * FROM players;"))
+            result = connection.execute(text(query))
+            # Convert the result rows to dictionaries
             data = [row_to_dict(row) for row in result]
+
         return jsonify(data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -201,9 +141,11 @@ def login():
         print(f"Stored hash: {user.Password}")
         print(f"Entered password: {password}")
 
-        # bcrypt will automatically extract the salt from the stored hash
         if bcrypt.check_password_hash(user.Password, password):
-            return jsonify({'message': 'Login successful'}), 200
+            return jsonify({
+                'message': 'Login successful',
+                'userID': user.UserID  # Include userID in the response
+            }), 200
         else:
             return jsonify({'message': 'Invalid email or password'}), 401
     else:
@@ -239,8 +181,184 @@ def reset_password():
     else:
         return jsonify({"error": "User not found"}), 404
     
+@app.route('/api/roster/<int:user_id>', methods=['GET'])
+def get_roster(user_id):
+    try:
+        # Query to join Roster, Player, Team, and InjuryReports based on UserID
+        query = """
+        SELECT r.UserID, p.PlayerID, p.FirstName, p.LastName, p.Position, 
+               t.TeamName, ir.InjuryType, ir.StartDate, ir.ExpectedReturnDate, ir.CurrentStatus
+        FROM Roster r
+        JOIN Player p ON r.PlayerID = p.PlayerID
+        LEFT JOIN Team t ON p.TeamID = t.TeamID
+        LEFT JOIN InjuryReports ir ON p.PlayerID = ir.PlayerID
+        WHERE r.UserID = :user_id
+        """
+        
+        with db.engine.connect() as connection:
+            result = connection.execute(text(query), {"user_id": user_id})
+            data = [row_to_dict(row) for row in result]
 
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+@app.route('/api/roster', methods=['POST'])
+def add_to_roster():
+    data = request.json
+    user_id = data.get('UserID')
+    player_id = data.get('PlayerID')
+
+    if not user_id or not player_id:
+        return jsonify({'error': 'UserID and PlayerID are required'}), 400
+
+    try:
+        # Check if the player is available
+        player = Player.query.get(player_id)
+        if not player or not player.DraftAvailability or not player.ActivePlayerFlag:
+            return jsonify({'error': 'Player is not available to add'}), 400
+        
+        # Set DraftAvailability to False to indicate that the player has been added to a roster
+        player.DraftAvailability = False
+
+        # Add the player to the roster
+        new_roster_entry = Roster(UserID=user_id, PlayerID=player_id)
+        db.session.add(new_roster_entry)
+        db.session.commit()
+        
+        return jsonify({'message': 'Player added to roster'}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/roster', methods=['DELETE'])
+def remove_from_roster():
+    data = request.json
+    user_id = data.get('UserID')
+    player_id = data.get('PlayerID')
+
+    if not user_id or not player_id:
+        return jsonify({'error': 'UserID and PlayerID are required'}), 400
+
+    try:
+        # Find the roster entry for the player
+        roster_entry = Roster.query.filter_by(UserID=user_id, PlayerID=player_id).first()
+        if not roster_entry:
+            return jsonify({'error': 'Player not found on the roster'}), 404
+        
+        # Remove the player from the roster
+        db.session.delete(roster_entry)
+        db.session.commit()
+
+        # Set the player's DraftAvailability to True
+        player = Player.query.get(player_id)
+        if player:
+            player.DraftAvailability = True
+            db.session.commit()
+
+        return jsonify({'message': 'Player removed from roster and DraftAvailability set to True'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/available-players', methods=['GET'])
+def get_available_players():
+    try:
+        players = Player.query.filter_by(DraftAvailability=True, ActivePlayerFlag=True).all()
+        data = [
+            {
+                "PlayerID": player.PlayerID,
+                "FirstName": player.FirstName,
+                "LastName": player.LastName,
+                "Position": player.Position,
+                "TeamName": player.team.TeamName if player.team else None.__annotations,
+                "DraftAvailability":player.DraftAvailability  # Include DraftAvailability
+            }
+            for player in players
+        ]
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    try:
+        users = User.query.all()
+        data = [
+            {
+                "UserID": user.UserID,
+                "FirstName": user.FirstName,
+                "LastName": user.LastName,
+                "Record": user.Record
+            }
+            for user in users
+        ]
+        return jsonify(data), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/player_injury/<int:player_id>', methods=['GET'])
+def get_player_injury(player_id):
+    try:
+        player = Player.query.get(player_id)
+        if player:
+            return jsonify({'PlayerID': player.PlayerID, 'InjuryHistory': player.InjuryHistory}), 200
+        else:
+            return jsonify({'error': 'Player not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+@app.route('/api/standings', methods=['GET'])
+def get_standings():
+    standings = db.session.query(
+        User.UserID, 
+        User.FirstName, 
+        User.LastName, 
+        User.Record, 
+        League.Week, 
+        League.User1_Score, 
+        League.User2_Score
+    ).join(League, (League.User1ID == User.UserID) | (League.User2ID == User.UserID)).all()
+    
+    return jsonify([{
+        "UserID": s.UserID,
+        "FirstName": s.FirstName,
+        "LastName": s.LastName,
+        "Record": s.Record,
+        "Week": s.Week,
+        "User1_Score": s.User1_Score,
+        "User2_Score": s.User2_Score
+    } for s in standings])
+# Function to calculate and update record for each user
+def update_user_records():
+    users = User.query.all()  # Fetch all users
+    
+    for user in users:
+        # Calculate wins and losses for each user based on League standings
+        wins = 0
+        losses = 0
+        
+        leagues = League.query.filter_by(UserID=user.UserID).all()  # Get all leagues for this user
+        for league in leagues:
+            if league.Standings:
+                for week, scores in league.Standings.items():
+                    if f'User {user.UserID}' in scores:  # Adjust this according to how you're identifying the user
+                        if scores[f'User {user.UserID}'] == 1:
+                            wins += 1
+                        else:
+                            losses += 1
+
+        # Update user's record
+        user.Record = f"{wins}-{losses}"
+        db.session.commit()  # Commit the changes to the database
+
+@app.route('/api/update_records', methods=['GET'])
+def update_records():
+    update_user_records()
+    return jsonify({"message": "User records updated successfully"})
 
 if __name__ == '__main__':
     app.run(debug=True)
-
