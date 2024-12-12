@@ -30,7 +30,9 @@ creds = get_db_credentials()
 username = creds["username"]
 password = creds["password"]
 app = Flask(__name__)
+# ADD PERSONAL DB HERE
 app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+pymysql://{username}:{password}@localhost/fantasyfootball2'
+
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'  # Set a secure key for JWT
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
