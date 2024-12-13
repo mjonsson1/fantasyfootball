@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 # Load the CSV file
-input_csv = '/Users/marcojonsson/FantasyFootball/fantasyfootball/SOURCEDATA/nfl_player_stats.csv'
+input_csv = '/Users/marcojonsson/FantasyFootball/fantasy2/fantasyfootball/SOURCEDATA/nfl_player_stats_with_week.csv'
 output_csv = 'nfl_clean_stats.csv'
 
 # Define the function to process 'X/Y' type entries
@@ -80,12 +80,12 @@ all_columns = [
     'yardsPerRushAttempt', 'rushingTouchdowns', 'longRushing', 'receptions', 'receivingYards',
     'yardsPerReception', 'receivingTouchdowns', 'longReception', 'receivingTargets', 
     'fumbles', 'fumblesLost', 'fumblesRecovered', 'totalTackles', 'soloTackles', 'sacks', 
-    'tacklesForLoss', 'passesDefended', 'QBHits', 'defensiveTouchdowns', 'interceptions.1',
+    'tacklesForLoss', 'passesDefended', 'QBHits', 'defensiveTouchdowns',
     'interceptionYards', 'interceptionTouchdowns', 'kickReturns', 'kickReturnYards', 'yardsPerKickReturn',
     'longKickReturn', 'kickReturnTouchdowns', 'puntReturns', 'puntReturnYards', 'yardsPerPuntReturn',
     'longPuntReturn', 'puntReturnTouchdowns', 'fieldGoalsMade', 'fieldGoalPct',
     'longFieldGoalMade', 'extraPointsMade', 'totalKickingPoints', 'punts',
-    'puntYards', 'grossAvgPuntYards', 'touchbacks', 'puntsInside20', 'longPunt', 'completions'
+    'puntYards', 'grossAvgPuntYards', 'touchbacks', 'puntsInside20', 'longPunt', 'completions', 'Week'
 ]
 
 # Aggregation rules
@@ -121,7 +121,6 @@ aggregation_rules = {
     'passesDefended': 'sum',
     'QBHits': 'sum',
     'defensiveTouchdowns': 'sum',
-    'interceptions.1': 'sum',
     'interceptionYards': 'sum',
     'interceptionTouchdowns': 'sum',
     'kickReturns': 'sum',
@@ -145,11 +144,15 @@ aggregation_rules = {
     'touchbacks': 'sum',
     'puntsInside20': 'sum',
     'longPunt': 'first',
-    'completions': 'sum'
+    'completions': 'sum',
+    'Week': 'first'
 }
 
 # Group by GameID and PlayerID and apply the aggregation rules
 df_aggregated = df.groupby(['GameID', 'PlayerID'], as_index=False).agg(aggregation_rules)
+if 'Week' not in df_aggregated.columns:
+    print("Week column is missing in the output DataFrame. Adding it manually.")
+    df_aggregated['Week'] = df['Week']
 
 # Save the cleaned and aggregated DataFrame to a new CSV
 df_aggregated.to_csv(output_csv, index=False)

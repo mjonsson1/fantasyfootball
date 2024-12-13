@@ -10,7 +10,7 @@ db_connection = mysql.connector.connect(
 )
 
 # Load your cleaned CSV file into a DataFrame
-csv_file = '/Users/marcojonsson/FantasyFootball/fantasyfootball/SOURCEDATA/nfl_clean_stats.csv'
+csv_file = '/Users/marcojonsson/FantasyFootball/fantasy2/fantasyfootball/SOURCEDATA/nfl_clean_stats.csv'
 df = pd.read_csv(csv_file)
 
 # Prepare the cursor to interact with the database
@@ -18,6 +18,8 @@ cursor = db_connection.cursor()
 count = 0
 
 # Loop through each row in the DataFrame and insert data into the table
+
+# IF error insert InterceptionsDefensive = VALUES(InterceptionsDefensive), between defensive td and interception yards
 for index, row in df.iterrows():
     count+=1
     print("Records Inserted: ", count)
@@ -30,12 +32,12 @@ for index, row in df.iterrows():
         ReceivingYards, YardsPerReception, ReceivingTouchdowns, LongReception, 
         ReceivingTargets, Fumbles, FumblesLost, FumblesRecovered, TotalTackles, 
         SoloTackles, Sacks, TacklesForLoss, PassesDefended, QBHits, DefensiveTouchdowns, 
-        InterceptionsDefensive, InterceptionYards, InterceptionTouchdowns, KickReturns, 
+        InterceptionYards, InterceptionTouchdowns, KickReturns, 
         KickReturnYards, YardsPerKickReturn, LongKickReturn, KickReturnTouchdowns, 
         PuntReturns, PuntReturnYards, YardsPerPuntReturn, LongPuntReturn, PuntReturnTouchdowns, 
         FieldGoalsMade, FieldGoalPct, LongFieldGoalMade, 
         ExtraPointsMade, TotalKickingPoints, Punts, PuntYards, 
-        GrossAvgPuntYards, Touchbacks, PuntsInside20, LongPunt, Completions
+        GrossAvgPuntYards, Touchbacks, PuntsInside20, LongPunt, Completions, Week
     ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -67,7 +69,6 @@ ON DUPLICATE KEY UPDATE
     PassesDefended = VALUES(PassesDefended),
     QBHits = VALUES(QBHits),
     DefensiveTouchdowns = VALUES(DefensiveTouchdowns),
-    InterceptionsDefensive = VALUES(InterceptionsDefensive),
     InterceptionYards = VALUES(InterceptionYards),
     InterceptionTouchdowns = VALUES(InterceptionTouchdowns),
     KickReturns = VALUES(KickReturns),
@@ -94,6 +95,9 @@ ON DUPLICATE KEY UPDATE
     Completions = VALUES(Completions),
     PlayerID = VALUES(PlayerID)
     """
+    # Check the number of placeholders
+    # print(f"Placeholders count: {insert_query.count('%s')}")
+
 
     # Prepare the data to insert into the query
     data = (
@@ -103,13 +107,17 @@ ON DUPLICATE KEY UPDATE
         row['yardsPerRushAttempt'], row['rushingTouchdowns'], row['longRushing'], row['receptions'], row['receivingYards'],
         row['yardsPerReception'], row['receivingTouchdowns'], row['longReception'], row['receivingTargets'], 
         row['fumbles'], row['fumblesLost'], row['fumblesRecovered'], row['totalTackles'], row['soloTackles'], row['sacks'], 
-        row['tacklesForLoss'], row['passesDefended'], row['QBHits'], row['defensiveTouchdowns'], row['interceptions.1'],
+        row['tacklesForLoss'], row['passesDefended'], row['QBHits'], row['defensiveTouchdowns'],
         row['interceptionYards'], row['interceptionTouchdowns'], row['kickReturns'], row['kickReturnYards'], row['yardsPerKickReturn'],
         row['longKickReturn'], row['kickReturnTouchdowns'], row['puntReturns'], row['puntReturnYards'], row['yardsPerPuntReturn'],
         row['longPuntReturn'], row['puntReturnTouchdowns'], row['fieldGoalsMade'], row['fieldGoalPct'],
         row['longFieldGoalMade'], row['extraPointsMade'], row['totalKickingPoints'], row['punts'],
-        row['puntYards'], row['grossAvgPuntYards'], row['touchbacks'], row['puntsInside20'], row['longPunt'], row['completions']
+        row['puntYards'], row['grossAvgPuntYards'], row['touchbacks'], row['puntsInside20'], row['longPunt'], row['completions'], row['Week']
     )
+    # print(f"Data: {data}")
+    # print(f"Data length: {len(data)}")
+    # print(df.columns)
+
 
     # Execute the query
     # print(f"Inserting data for Player: {row['PlayerName']}, Team: {row['Team']}")

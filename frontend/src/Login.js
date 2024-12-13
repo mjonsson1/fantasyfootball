@@ -80,6 +80,8 @@ const Login = () => {
         
         // Store token in localStorage
         localStorage.setItem('auth_token', response.data.token);
+        localStorage.setItem('userID', response.data.userID);
+        console.log(response.data.userID)
 
         // Update login state
         setIsLoggedIn(true);

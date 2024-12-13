@@ -517,3 +517,152 @@
 .dropdown:hover .dropdown-link {
   background-color: #ddd;
 }
+.remove-btn {
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.remove-btn:hover {
+  background-color: darkred;
+}
+
+.success-message {
+  color: green;
+  font-size: 16px;
+  margin-top: 10px;
+}
+.refresh-btn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.refresh-btn:hover {
+  background-color: #45a049;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px;
+  margin-top: 20px;
+  border-radius: 5px;
+  border: 1px solid #f5c6cb;
+  text-align: center;
+  animation: fadeOut 5s forwards; /* Optional fade-out animation */
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}.injury-impact-analyzer {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+h2 {
+  color: #2c3e50;
+}
+
+h3 {
+  color: #34495e;
+  margin-top: 20px;
+}
+
+.player-section {
+  margin-bottom: 20px;
+}
+
+.player-list {
+  display: flex;
+  flex-direction: column; /* Stack players vertically */
+  gap: 10px;
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Align items at the start of the card */
+  width: 100%;
+  border: 1px solid #ccc;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+input[type="checkbox"] {
+  transform: scale(1.5); /* Make the checkbox bigger */
+  margin-right: 15px; /* Space between checkbox and label */
+}
+
+label {
+  display: flex; /* Flexbox container for label */
+  align-items: center; /* Vertically center the label content */
+  justify-content: flex-start; /* Align the text to the left */
+  gap: 10px; /* Space between checkbox and label text */
+}
+
+.player-details {
+  display: flex;
+  flex-direction: row; /* Align text horizontally in the card */
+  align-items: center; /* Align text vertically in the center */
+  justify-content: flex-start;
+}
+
+.player-details span {
+  margin-right: 15px; /* Add space between each piece of player data */
+}
+
+.recommendations-section {
+  display: flex;
+  justify-content: flex-end; /* Move the button to the far right */
+  margin-bottom: 20px; /* Add some space below */
+}
+
+.recommendations-button {
+  background-color: #28a745; /* Bright green background */
+  color: white; /* White text */
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.recommendations-button:hover {
+  background-color: #218838; /* Darker green on hover */
+}
+.score-section {
+  margin-bottom: 20px;
+  text-align: center; /* Center the text and the rectangle */
+}
+
+.projected-score-text {
+  font-size: 40px; /* Larger font size for the projected score */
+  font-weight: bold;
+  color: #333;
+  margin: 10px 0;
+}
+
+.score-rectangle {
+  height: 30px; /* Height of the rectangle */
+  background-color: #28a745; /* Green background */
+  border-radius: 5px; /* Rounded corners */
+  margin-top: 10px;
+  transition: width 0.3s ease-in-out; /* Smooth transition for width change */
+}
