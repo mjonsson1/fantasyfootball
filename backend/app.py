@@ -650,4 +650,3 @@ def get_player_recommendations():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
