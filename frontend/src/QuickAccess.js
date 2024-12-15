@@ -9,9 +9,9 @@ function QuickAccess() {
         <a href="standings">Check Standings</a>
       </div>
       <div className="card">
-        <h2>Injury Updates</h2>
-        <p>Get the latest injury news.</p>
-        <a href="analyzer">View Injury Reports</a>
+        <h2>Injury Calculations</h2>
+        <p>See how injuries affect your team.</p>
+        <a href="analyzer">View Analysis</a>
       </div>
       <div className="card">
         <h2>Roster Management</h2>
